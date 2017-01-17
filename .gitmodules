@@ -1,0 +1,6 @@
+[submodule "cmake"]
+	path = cmake
+	url = https://www.github.com/openastro/cmake-modules
+[submodule "include/fmt"]
+	path = include/fmt
+	url = https://github.com/fmtlib/fmt

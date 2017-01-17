@@ -1,0 +1,2 @@
+* Nice to have
+** Move __PRETTY_FUNCTION__ to the last visible line in the screen
