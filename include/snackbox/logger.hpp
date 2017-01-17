@@ -13,27 +13,25 @@
 #include <algorithm>
 #include <iostream>
 
-#define _LOG_ENTRY                                                             \
-  snackbox::logger::trace_entry("{funcname:<30}",                              \
-                                fmt::arg("funcname", __PRETTY_FUNCTION__));
+#include <chrono>
+
+#define LOG_ENTRY_NO_TIME                                                      \
+  snackbox::logger::trace_entry("{funcname}",                                  \
+                                fmt::arg("funcname", __PRETTY_FUNCTION__))
+
+#define LOG_EXIT_NO_TIME                                                       \
+  snackbox::logger::trace_exit("{funcname}",                                   \
+                               fmt::arg("funcname", __PRETTY_FUNCTION__))
 
 #define LOG_ENTRY                                                              \
-  snackbox::logger::trace_entry("{funcname:<30}",                              \
-                                fmt::arg("funcname", __PRETTY_FUNCTION__));    \
-  std::chrono::high_resolution_clock::time_point __func_start =                \
-      std::chrono::high_resolution_clock::now()
+  snackbox::logger::trace_entry(                                               \
+      "{funcname:<{padding}} ({repaint_time:.2f} ms)",                         \
+      fmt::arg("funcname", __PRETTY_FUNCTION__))
 
 #define LOG_EXIT                                                               \
-  std::chrono::high_resolution_clock::time_point __func_end =                  \
-      std::chrono::high_resolution_clock::now();                               \
   snackbox::logger::trace_exit(                                                \
-      "{funcname:<{padding}} ({time_taken:.2f} ms)",                           \
-      fmt::arg("funcname", __PRETTY_FUNCTION__),                               \
-      fmt::arg("time_taken",                                                   \
-               std::chrono::duration_cast<std::chrono::microseconds>(          \
-                   __func_end - __func_start)                                  \
-                       .count() /                                              \
-                   1000.0));
+      "{funcname:<{padding}} ({repaint_time:.2f} ms)",                         \
+      fmt::arg("funcname", __PRETTY_FUNCTION__))
 
 namespace snackbox {
 namespace logger {
@@ -90,6 +88,8 @@ extern int old_persistent_length;
 
 extern std::string persistent_msg;
 
+extern double repaint_time;
+
 template <typename... Args>
 std::string _create_log(std::string msg, log_level level, Args... args) {
   int prew = level_formats[level].length();
@@ -108,12 +108,14 @@ std::string _create_log(std::string msg, log_level level, Args... args) {
 }
 
 void _update_persistent_log();
+std::string highlightFunctionName(std::string msg, std::string format_string);
+void set_repaint_time(double micros);
 
 template <typename... Args>
 void _log(std::string msg, log_level level, Args... args) {
   fmt::print("{log_text:<130}\n",
              fmt::arg("log_text", _create_log(msg, level, args...)));
-             // fmt::arg("len", old_persistent_length));
+  // fmt::arg("len", old_persistent_length));
   _update_persistent_log();
 }
 
@@ -136,16 +138,15 @@ template <typename... Args> void critical(std::string msg, Args... args) {
   _log(msg, CRITICAL, args...);
 }
 
-std::string highlightFunctionName(std::string msg, std::string format_string);
-
 template <typename... Args> void trace_entry(std::string msg, Args... args) {
   // old_persistent_length = persistent_msg.length();
   persistent_msg = _create_log(
       fmt::format(highlightFunctionName(
-          fmt::format(msg, fmt::arg("padding", time_padding), args...),
+          fmt::format(msg, fmt::arg("padding", time_padding),
+                      fmt::arg("repaint_time", repaint_time), args...),
           format_code[underline])),
       _ENTER_FUNC);
-  fmt::print("{:<130}\r", persistent_msg);//, old_persistent_length);
+  fmt::print("{:<130}\r", persistent_msg); //, old_persistent_length);
   std::cout.flush();
 }
 
@@ -153,10 +154,11 @@ template <typename... Args> void trace_exit(std::string msg, Args... args) {
   // old_persistent_length = persistent_msg.length();
   persistent_msg = _create_log(
       fmt::format(highlightFunctionName(
-          fmt::format(msg, fmt::arg("padding", time_padding), args...),
+          fmt::format(msg, fmt::arg("padding", time_padding),
+                      fmt::arg("repaint_time", repaint_time), args...),
           format_code[underline])),
       _EXIT_FUNC);
-  fmt::print("{:<130}\r", persistent_msg);//, old_persistent_length);
+  fmt::print("{:<130}\r", persistent_msg); //, old_persistent_length);
   std::cout.flush();
 }
 

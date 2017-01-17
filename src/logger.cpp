@@ -6,7 +6,7 @@
 namespace snackbox {
 namespace logger {
 
-  std::string persistent_msg = "";
+std::string persistent_msg = "";
 
 std::map<format_type, std::string> format_code = {
     {reset, "\033[00m"},    {bold, "\033[1m"},  {dark, "\033[2m"},
@@ -43,7 +43,9 @@ std::map<log_level, std::string> level_formats = {
 int time_padding = 90;
 int indent = 4;
 
-  int old_persistent_length = 0;
+int old_persistent_length = 0;
+
+double repaint_time = 0;
 
 std::string highlightFunctionName(std::string msg, std::string format_string) {
   std::regex functionWithArgs("::([a-zA-Z]*)\\(([a-z])");
@@ -63,10 +65,11 @@ std::string highlightFunctionName(std::string msg, std::string format_string) {
   return ret;
 }
 
+void set_repaint_time(double micros) { repaint_time = micros; }
 
-  void _update_persistent_log() {
-    fmt::print(persistent_msg + "\r");
-    std::cout.flush();
-  }
+void _update_persistent_log() {
+  fmt::print(persistent_msg + "\r");
+  std::cout.flush();
+}
 }
 }
