@@ -412,7 +412,8 @@ void Snackbar::repaint() {
   std::chrono::high_resolution_clock::time_point repaint_end =
       std::chrono::high_resolution_clock::now();
   logger::set_repaint_time(std::chrono::duration<double, std::micro>(
-                                                                     (repaint_end - repaint_start).count() / 1000.0).count());
+                               (repaint_end - repaint_start).count() / 1000.0)
+                               .count());
 }
 
 void Snackbar::flushToScreen() {
